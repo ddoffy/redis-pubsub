@@ -5,7 +5,7 @@ using StackExchange.Redis;
 
 IConnectionMultiplexer redis = ConnectionMultiplexer.Connect("localhost");
 
-const string channel = "test-channel";
+const string channel = "test-ch";
 var          token   = new CancellationTokenSource();
 
 Subscribe(channel, token.Token);
@@ -23,25 +23,25 @@ Console.WriteLine("Exiting...");
 return;
 
 
-async Task Publish(string channel, string msg)
+async Task Publish(string ch, string msg)
 {
    var subscriber = redis.GetSubscriber();
-   await subscriber.PublishAsync(channel, msg);
-   Console.WriteLine($"Sent: {msg} to {channel}");
+   await subscriber.PublishAsync(ch, msg);
+   Console.WriteLine($"Sent: {msg} to {ch}");
    await Task.Delay(500);
 }
 
-async Task Subscribe(string channel, CancellationToken token)
+async Task Subscribe(string ch, CancellationToken ct)
 {
-   Console.WriteLine($"Subscribing to {channel}");
+   Console.WriteLine($"Subscribing to {ch}");
    var subscriber = redis.GetSubscriber();
    
-   var channelQueueMsg = await subscriber.SubscribeAsync(channel);
-   while (!token.IsCancellationRequested)
+   var channelQueueMsg = await subscriber.SubscribeAsync(ch);
+   while (!ct.IsCancellationRequested)
    {
-      var msg = await channelQueueMsg.ReadAsync(token);
-      Console.WriteLine($"Receieved: {msg.Message} from {msg.Channel}");
-      await Task.Delay(100, token);
+      var msg = await channelQueueMsg.ReadAsync(ct);
+      Console.WriteLine($"Received: {msg.Message} from {msg.Channel}");
+      await Task.Delay(100, ct);
    }
    Console.WriteLine("Unsubscribing...");
 }
